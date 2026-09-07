@@ -1,4 +1,4 @@
-# 🛡️ Hacker-Harness
+# 🛡️ Hacker-Harness - BETA
 
 > **Authorization-Aware Agentic Penetration Testing & Attack Orchestration Harness**
 
