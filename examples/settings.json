@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "activeProvider": "deepseek-openai",
+  "providers": {
+    "openai": {
+      "format": "openai",
+      "model": "gpt-5-mini",
+      "apiKey": "${OPENAI_API_KEY}",
+      "contextWindow": 128000
+    },
+    "deepseek-openai": {
+      "format": "openai",
+      "baseUrl": "https://api.deepseek.com",
+      "model": "deepseek-v4-pro",
+      "apiKey": "${DEEPSEEK_API_KEY}",
+      "contextWindow": 1000000
+    },
+    "deepseek-anthropic": {
+      "format": "anthropic",
+      "baseUrl": "https://api.deepseek.com/anthropic",
+      "model": "deepseek-v4-pro",
+      "apiKey": "${DEEPSEEK_API_KEY}",
+      "contextWindow": 1000000
+    },
+    "kimi-openai": {
+      "format": "openai",
+      "baseUrl": "https://YOUR-KIMI-ENDPOINT.example/v1",
+      "model": "YOUR-KIMI-MODEL",
+      "apiKey": "${KIMI_API_KEY}"
+    },
+    "kimi-anthropic": {
+      "format": "anthropic",
+      "baseUrl": "https://YOUR-KIMI-ANTHROPIC-ENDPOINT.example",
+      "model": "YOUR-KIMI-MODEL",
+      "apiKey": "${KIMI_API_KEY}"
+    }
+  },
+  "permissions": {
+    "commandMode": "strict",
+    "allowFileWrites": true
+  },
+  "agent": {
+    "maxToolRounds": 60,
+    "maxFailedToolRounds": 20,
+    "commandTimeoutSeconds": 120,
+    "maxOutputChars": 50000,
+    "autoCompactPercent": 50
+  },
+  "systemPromptFile": ".hacker-harness/SYSTEM.md",
+  "skillPaths": [
+    ".hacker-harness/skills"
+  ],
+  "methodologyPaths": [
+    "methodology"
+  ],
+  "workflowPaths": [
+    "workflows"
+  ],
+  "methodologies": {
+    "strictByDefault": true,
+    "offerInstallMissing": true,
+    "autoRoute": true
+  },
+  "mcpServe": {
+    "allowActive": false
+  },
+  "ui": {
+    "theme": "hacker",
+    "largeBanner": true,
+    "toolCards": true,
+    "showToolOutput": true,
+    "maxToolOutputLines": 12,
+    "methodologyProgress": true,
+    "showContext": true
+  }
+}

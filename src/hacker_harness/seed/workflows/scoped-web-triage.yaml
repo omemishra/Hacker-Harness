@@ -1,0 +1,43 @@
+name: scoped-web-triage
+description: Authorized web triage with signal tracking and human approval gates
+version: 1
+inputs:
+  target: example.com
+nodes:
+  - id: scope_review
+    description: Confirm authorization boundaries
+    prompt: >-
+      Review the active authorization scope for {{ target }}. Use scope_check on the target.
+      Summarize allowed assets, exclusions, and rate-limit rules. Do not run active attacks yet.
+      Narrate what you are checking as you work so the operator can follow along.
+    save_output: .hacker-harness/artifacts/scope-review-{{ target }}.md
+  - id: authorize
+    description: Human authorization gate for active triage
+    depends_on: [scope_review]
+    approval: "Approve active web triage against {{ target }} within the current scope?"
+  - id: surface_map
+    description: Map attack surface with minimal requests
+    depends_on: [authorize]
+    prompt: >-
+      Perform scoped surface mapping for {{ target }}: routes, auth flows, APIs, headers, cookies.
+      Prefer passive review and low-impact requests. Record unconfirmed leads with signal_record only.
+      Do not claim vulnerabilities without evidence. Narrate live: say what endpoint or behavior you
+      are probing, what you observe, and why it might matter (e.g. reflected input, verbose errors)
+      before recording a signal.
+    save_output: .hacker-harness/artifacts/surface-map-{{ target }}.md
+  - id: triage
+    description: Triage signals into evidence-backed findings
+    depends_on: [surface_map]
+    prompt: >-
+      Review signal findings for {{ target }}. Advance only evidence-backed items using
+      finding_advance (signal→confirmed→ready). Dismiss false positives with finding_dismiss.
+      Use finding_create only when you already have confirmed evidence and remediation guidance.
+      Explain each triage decision out loud: what you are validating, exploit attempts you make,
+      and whether it holds up.
+  - id: summarize
+    description: Engagement triage summary
+    depends_on: [triage]
+    prompt: >-
+      Summarize the triage for {{ target }}: signals, confirmed, ready, dismissed, and gaps.
+      List safe next steps the operator can approve.
+    save_output: .hacker-harness/artifacts/triage-summary-{{ target }}.md

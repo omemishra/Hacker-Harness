@@ -1,0 +1,46 @@
+name: code-review
+description: Comprehensive Source Code Security Review (Semgrep, Bandit, Medusa, Bearer, Malcontent SAST, taint analysis, business logic flaws, dependency audit, and remediation).
+version: 1
+inputs:
+  target: https://github.com/org/repo-or-local-path
+nodes:
+  - id: authorize
+    description: Operator authorization for source code security review
+    approval: "Authorize comprehensive source code security review on {{ target }}?"
+
+  - id: clone_or_map
+    description: Clone repository or index local source tree
+    depends_on: [authorize]
+    prompt: >-
+      Prepare codebase workspace for {{ target }}.
+      skill_load code-review-deep-audit.
+      If a remote git URL is provided, clone with shallow depth. Map the repository structure, language breakdown, dependencies (package.json, requirements.txt, go.mod, Pom.xml), and entrypoints.
+      Save architecture overview to Recon/code_review_architecture.md.
+    save_output: .hacker-harness/artifacts/code-review-arch-{{ target }}.md
+
+  - id: gate_sast
+    description: Approve static analysis, taint tracking, and logic review
+    depends_on: [clone_or_map]
+    approval: "Architecture mapped. Approve multi-engine SAST (Semgrep, Bandit, Medusa, Bearer, Malcontent) and deep vulnerability review on {{ target }}?"
+
+  - id: deep_code_audit
+    description: Multi-engine SAST (Semgrep/Bandit/Medusa/Bearer/Malcontent) and deep manual code review
+    depends_on: [gate_sast]
+    prompt: >-
+      Execute deep source code audit for {{ target }}. skill_load code-review-deep-audit.
+      1. Run multi-engine SAST: Semgrep (OWASP Top 10), Bandit (Python AST/linter), Medusa (40,000+ patterns), Malcontent (14,500+ YARA supply chain rules), and Bearer (data flow).
+      2. Trace untrusted user inputs from routing controllers to critical sinks (SQL queries, shell exec, file I/O, deserialization).
+      3. Audit authentication, authorization middleware, session handling, and RBAC enforcement.
+      4. Review critical business logic (billing, token validation, password reset, rate limits, state machines).
+      5. Inspect hardcoded secrets, cryptographic usage (AES-GCM vs ECB, weak hashing), and configuration files.
+      6. For each confirmed vulnerability, record file:line reference, clickable permalink, vulnerable snippet, impact, and concrete remediation.
+      Write detailed report to Recon/code_review_report.md.
+    save_output: .hacker-harness/artifacts/code-review-findings-{{ target }}.md
+
+  - id: summarize
+    description: Code review findings consolidation and validation
+    depends_on: [deep_code_audit]
+    prompt: >-
+      Summarize confirmed code vulnerabilities for {{ target }} prioritized by severity (P1 Critical → P4 Low).
+      Run /validate across all findings to enforce the 7-Question Validation Gate.
+    save_output: .hacker-harness/artifacts/code-review-summary-{{ target }}.md

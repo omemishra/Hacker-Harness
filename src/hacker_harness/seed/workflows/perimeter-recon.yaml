@@ -1,0 +1,42 @@
+name: perimeter-recon
+description: External perimeter reconnaissance, appliance audit (VPN, vCenter), and public asset discovery.
+version: 1
+inputs:
+  target: example.com
+nodes:
+  - id: authorize
+    description: Operator approval for perimeter reconnaissance
+    approval: "Run external perimeter reconnaissance against {{ target }}?"
+
+  - id: recon_assets
+    description: Asset and subdomain discovery
+    depends_on: [authorize]
+    prompt: >-
+      Execute perimeter reconnaissance for {{ target }}. skill_load genpentest-p2-public-index.
+      Discover subdomains, DNS records, public indices, and technology fingerprints.
+      Record any exposed credentials, dotfiles, or historical endpoints.
+    save_output: .hacker-harness/artifacts/perimeter-recon-{{ target }}.md
+
+  - id: gate_appliance_triage
+    description: Approve appliance and perimeter gateway audit
+    depends_on: [recon_assets]
+    approval: "Recon complete. Approve deep perimeter gateway and appliance audit for {{ target }}?"
+
+  - id: appliance_audit
+    description: Audit SSL-VPN gateways, VMware appliances, and cloud assets
+    depends_on: [gate_appliance_triage]
+    prompt: >-
+      Perform non-destructive perimeter auditing on discovered appliances for {{ target }}.
+      If SSL-VPN portals are discovered (Cisco, Fortinet, Citrix, GlobalProtect, Ivanti), skill_load perimeter-vpn-gateway-audit.
+      If VMware vCenter / Workspace ONE portals are discovered, skill_load perimeter-vcenter-appliance-audit.
+      If public S3 buckets or cloud endpoints are discovered, skill_load cloud-aws-iam-privesc.
+      Record unconfirmed leads with signal_record and validated disclosures with finding_advance.
+    save_output: .hacker-harness/artifacts/perimeter-appliance-{{ target }}.md
+
+  - id: summarize
+    description: Perimeter report summary
+    depends_on: [appliance_audit]
+    prompt: >-
+      Summarize perimeter reconnaissance and appliance findings for {{ target }}.
+      Evaluate findings against the 7-Question Validation Gate (/validate).
+    save_output: .hacker-harness/artifacts/perimeter-summary-{{ target }}.md

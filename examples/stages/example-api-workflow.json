@@ -1,0 +1,32 @@
+{
+  "workflow": "example-api-workflow",
+  "stages": [
+    {
+      "id": "Stage-1",
+      "title": "Auth Setup",
+      "source": "example-api-workflow.md",
+      "heading": "Stage 1",
+      "skills": ["genpentest-overview"],
+      "requires": [],
+      "writes": ["tokens.txt"]
+    },
+    {
+      "id": "Stage-2",
+      "title": "Endpoint Discovery",
+      "source": "example-api-workflow.md",
+      "heading": "Stage 2",
+      "skills": ["example-graphql-skill"],
+      "requires": ["tokens.txt"],
+      "writes": ["endpoints.json"]
+    },
+    {
+      "id": "Stage-3",
+      "title": "Vulnerability Testing",
+      "source": "example-api-workflow.md",
+      "heading": "Stage 3",
+      "skills": ["example-graphql-skill"],
+      "requires": ["endpoints.json", "tokens.txt"],
+      "writes": ["findings/api_findings.md"]
+    }
+  ]
+}

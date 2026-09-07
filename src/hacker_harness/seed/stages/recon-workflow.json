@@ -1,0 +1,285 @@
+{
+  "workflow": "recon-workflow",
+  "stages": [
+    {
+      "id": "R0",
+      "title": "Scope Verification & Pre-flight",
+      "source": "recon-workflow.md",
+      "heading": "R0",
+      "skills": ["genpentest-overview"],
+      "requires": [],
+      "writes": ["Recon/scope_summary.md"]
+    },
+    {
+      "id": "R1",
+      "title": "Sensitive File Exposure",
+      "source": "recon-workflow.md",
+      "heading": "R1",
+      "skills": [
+        "genpentest-p2-public-index",
+        "perimeter-vpn-gateway-audit",
+        "perimeter-vcenter-appliance-audit",
+        "perimeter-exchange-ntlm-info",
+        "cloud-aws-iam-privesc",
+        "recon-subdomain-takeover-audit",
+        "mobile-apk-decompilation-audit",
+        "supply-chain-cicd-audit"
+      ],
+      "requires": ["Recon/scope_summary.md"],
+      "writes": [
+        "Recon/target_sensitive_files.txt",
+        "Recon/dotfiles.txt",
+        "Recon/leaked_secrets.txt"
+      ]
+    },
+    {
+      "id": "R2",
+      "title": "Web Crawling (katana)",
+      "source": "recon-workflow.md",
+      "heading": "R2",
+      "skills": ["genpentest-p2-public-index"],
+      "requires": ["Recon/scope_summary.md"],
+      "writes": ["Recon/target_katana.txt"]
+    },
+    {
+      "id": "R3",
+      "title": "URL Extraction (gau + waybackurls)",
+      "source": "recon-workflow.md",
+      "heading": "R3",
+      "skills": ["genpentest-p2-public-index"],
+      "requires": ["Recon/scope_summary.md"],
+      "writes": [
+        "Recon/target_gau.txt",
+        "Recon/target_wayback.txt"
+      ]
+    },
+    {
+      "id": "R4",
+      "title": "Responsive Analysis (Emails, Tokens, Files)",
+      "source": "recon-workflow.md",
+      "heading": "R4",
+      "skills": [
+        "genpentest-p2-public-index",
+        "identity-jwt-manipulation",
+        "identity-oauth-oidc-abuse"
+      ],
+      "requires": ["Recon/target_gau.txt", "Recon/target_wayback.txt"],
+      "writes": [
+        "Recon/GW_emails.txt",
+        "Recon/GW_live_tokens.txt",
+        "Recon/GW_files.txt"
+      ]
+    },
+    {
+      "id": "R5",
+      "title": "JavaScript Bundle Analysis",
+      "source": "recon-workflow.md",
+      "heading": "R5",
+      "skills": [
+        "genpentest-p3-js-analysis",
+        "web-graphql-introspection-bypass"
+      ],
+      "requires": ["Recon/target_katana.txt"],
+      "writes": [
+        "Recon/gwjs_endpoints.txt",
+        "Recon/js_secrets.txt",
+        "Recon/target_postmessage.txt"
+      ]
+    },
+    {
+      "id": "R6",
+      "title": "Source Map Extraction",
+      "source": "recon-workflow.md",
+      "heading": "R6",
+      "skills": ["genpentest-p3-js-analysis"],
+      "requires": ["Recon/gwjs_endpoints.txt"],
+      "writes": ["Recon/target_recovered_sources.txt"]
+    },
+    {
+      "id": "R7",
+      "title": "Parameter Discovery & URL Synthesis (Arjun + qsreplace)",
+      "source": "recon-workflow.md",
+      "heading": "R7",
+      "skills": [
+        "genpentest-p3-js-analysis",
+        "web-lfi-path-traversal-audit"
+      ],
+      "requires": ["Recon/gwjs_endpoints.txt", "Recon/target_gau.txt"],
+      "writes": [
+        "Recon/mined_endpoints.txt",
+        "Recon/GWJSAJQ_urls.txt",
+        "Recon/ptLFI.txt"
+      ]
+    },
+    {
+      "id": "R8",
+      "title": "Technology Fingerprinting (whatweb)",
+      "source": "recon-workflow.md",
+      "heading": "R8",
+      "skills": ["genpentest-overview"],
+      "requires": ["Recon/scope_summary.md"],
+      "writes": ["Recon/target_whatweb.txt"]
+    },
+    {
+      "id": "R9",
+      "title": "Security Headers & CSP Bypass",
+      "source": "recon-workflow.md",
+      "heading": "R9",
+      "skills": [
+        "genpentest-overview",
+        "web-xss-polyglot-execution"
+      ],
+      "requires": ["Recon/target_whatweb.txt"],
+      "writes": [
+        "Recon/target_csp_domains.txt",
+        "Recon/target_csp_bypass_payloads.txt",
+        "Recon/security_headers.md"
+      ]
+    },
+    {
+      "id": "R10",
+      "title": "Open Redirect (OpenRedirex)",
+      "source": "recon-workflow.md",
+      "heading": "R10",
+      "skills": ["web-open-redirect-audit"],
+      "requires": ["Recon/GWJSAJQ_urls.txt"],
+      "writes": [
+        "Recon/GW_open_redirect.txt",
+        "Recon/AQ_redirect.txt",
+        "Recon/P_O_Redirect.txt",
+        "Recon/P_O_Redirect_findings.txt"
+      ]
+    },
+    {
+      "id": "R11",
+      "title": "Active Vulnerability Probing (XSS/SQLi/SSTI/IDOR)",
+      "source": "recon-workflow.md",
+      "heading": "R11",
+      "skills": [
+        "genpentest-p4-client-side",
+        "web-xss-polyglot-execution",
+        "web-sqli-blind-polyglot",
+        "web-ssti-engine-rce",
+        "web-idor-bola-authorization",
+        "web-api-mass-assignment-pollution"
+      ],
+      "requires": ["Recon/GWJSAJQ_urls.txt", "Recon/target_csp_bypass_payloads.txt"],
+      "writes": ["Recon/psqli.txt"]
+    },
+    {
+      "id": "R12",
+      "title": "Client-Side Prototype Pollution (CSPP)",
+      "source": "recon-workflow.md",
+      "heading": "R12",
+      "skills": ["web-prototype-pollution-cspp"],
+      "requires": ["Recon/GWJSAJQ_urls.txt"],
+      "writes": ["Recon/target_cspp_findings.txt"]
+    },
+    {
+      "id": "R13",
+      "title": "SSRF Testing & Out-Of-Band Verification",
+      "source": "recon-workflow.md",
+      "heading": "R13",
+      "skills": ["web-ssrf-cloud-pivot"],
+      "requires": ["Recon/GWJSAJQ_urls.txt"],
+      "writes": [
+        "Recon/target_ssrf_params.txt",
+        "Recon/target_oob_callbacks.txt"
+      ]
+    },
+    {
+      "id": "E1",
+      "title": "SQL Injection Exploitation (sqlmap)",
+      "source": "recon-workflow.md",
+      "heading": "E1",
+      "skills": ["web-sqli-blind-polyglot"],
+      "requires": ["Recon/psqli.txt"],
+      "writes": ["Recon/target_sqli_exploited.txt"]
+    },
+    {
+      "id": "E2",
+      "title": "LFI & Path Traversal Verification",
+      "source": "recon-workflow.md",
+      "heading": "E2",
+      "skills": ["web-lfi-path-traversal-audit"],
+      "requires": ["Recon/ptLFI.txt", "Recon/target_whatweb.txt"],
+      "writes": ["Recon/target_lfi_exploited.txt"]
+    },
+    {
+      "id": "R14",
+      "title": "GitHub Recon & Dorking",
+      "source": "recon-workflow.md",
+      "heading": "R14",
+      "skills": ["code-repo-secret-audit"],
+      "requires": ["Recon/scope_summary.md"],
+      "writes": [
+        "Recon/target_gh_dorks.txt",
+        "Recon/target_trufflehog.txt",
+        "Recon/target_gh_pr_leaks.txt",
+        "Recon/target_gh_commit_leaks.txt"
+      ]
+    },
+    {
+      "id": "R15",
+      "title": "Code Review & SAST",
+      "source": "recon-workflow.md",
+      "heading": "R15",
+      "skills": [
+        "code-review-deep-audit",
+        "supply-chain-cicd-audit"
+      ],
+      "requires": ["Recon/scope_summary.md"],
+      "writes": [
+        "Recon/target_code_review_semgrep.txt",
+        "Recon/target_code_review_bearer.txt",
+        "Recon/target_code_review_sca.txt",
+        "Recon/target_code_review_report.md"
+      ]
+    },
+    {
+      "id": "R16",
+      "title": "Port Scanning (Naabu / Nmap)",
+      "source": "recon-workflow.md",
+      "heading": "R16",
+      "skills": ["perimeter-port-service-fuzz"],
+      "requires": ["Recon/scope_summary.md"],
+      "writes": ["Recon/target_ports.txt"]
+    },
+    {
+      "id": "R17",
+      "title": "Directory & Endpoint Fuzzing (Feroxbuster / ffuf)",
+      "source": "recon-workflow.md",
+      "heading": "R17",
+      "skills": ["perimeter-port-service-fuzz"],
+      "requires": ["Recon/scope_summary.md"],
+      "writes": ["Recon/target_ferox.txt"]
+    },
+    {
+      "id": "R18",
+      "title": "403/401 Restriction Bypass",
+      "source": "recon-workflow.md",
+      "heading": "R18",
+      "skills": ["perimeter-port-service-fuzz"],
+      "requires": ["Recon/target_ferox.txt"],
+      "writes": ["Recon/target_403_bypasses.txt"]
+    },
+    {
+      "id": "R19",
+      "title": "CORS Misconfiguration Check",
+      "source": "recon-workflow.md",
+      "heading": "R19",
+      "skills": ["web-cors-misconfiguration-bypass"],
+      "requires": ["Recon/gwjs_endpoints.txt"],
+      "writes": ["Recon/target_cors_findings.txt"]
+    },
+    {
+      "id": "R20",
+      "title": "Certificate Transparency & SAN (crt.sh)",
+      "source": "recon-workflow.md",
+      "heading": "R20",
+      "skills": ["recon-subdomain-takeover-audit"],
+      "requires": ["Recon/scope_summary.md"],
+      "writes": ["Recon/target_crtsh.txt"]
+    }
+  ]
+}

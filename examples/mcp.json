@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "mcpServers": {
+    "playwright": {
+      "enabled": true,
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest", "--headless", "--browser", "chromium", "--isolated"],
+      "env": {},
+      "protocolVersion": "2025-06-18",
+      "timeoutSeconds": 30,
+      "requireStartupApproval": true,
+      "requireToolApproval": true
+    },
+    "caido": {
+      "enabled": true,
+      "command": "caido-mcp-server",
+      "args": ["serve"],
+      "env": {
+        "CAIDO_URL": "http://127.0.0.1:8080"
+      },
+      "protocolVersion": "2025-06-18",
+      "timeoutSeconds": 60,
+      "requireStartupApproval": true,
+      "requireToolApproval": true
+    }
+  }
+}

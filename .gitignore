@@ -1,0 +1,23 @@
+.venv/
+.pytest_cache/
+.ruff_cache/
+__pycache__/
+*.py[cod]
+dist/
+build/
+*.whl
+*.egg-info/
+.playwright-mcp/
+.hacker-harness/
+.cursor/
+.env
+.env.*
+!.env.example
+
+# Local / not published to GitHub
+/tests/
+/docs/
+/PLAN.md
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/

@@ -1,0 +1,60 @@
+name: api-security-audit
+description: Targeted API and Identity assessment covering GraphQL, OAuth/JWT, BFLA/BOLA, and parameter mutations.
+version: 1
+inputs:
+  target: api.example.com
+nodes:
+  - id: authorize
+    description: Operator approval for targeted API security assessment
+    approval: "Run targeted API security assessment against {{ target }}?"
+
+  - id: api_discovery
+    description: Discover API controllers, GraphQL endpoints, and schemas
+    depends_on: [authorize]
+    prompt: >-
+      Discover active API endpoints and schemas for {{ target }}. skill_load genpentest-p3-js-analysis.
+      If GraphQL endpoints are identified (/graphql, /query), skill_load web-graphql-introspection-bypass.
+      Record discovered controllers, actions, and schemas.
+    save_output: .hacker-harness/artifacts/api-discovery-{{ target }}.md
+
+  - id: gate_auth_audit
+    description: Approve identity and authentication flow testing
+    depends_on: [api_discovery]
+    approval: "API discovery complete. Approve identity, OAuth, and JWT verification for {{ target }}?"
+
+  - id: auth_token_audit
+    description: Audit OAuth 2.0 / OIDC and JWT token implementations
+    depends_on: [gate_auth_audit]
+    prompt: >-
+      Audit authentication and token flows on {{ target }}.
+      If OAuth/OIDC login or callback flows exist, skill_load identity-oauth-oidc-abuse.
+      If JWT tokens are used, skill_load identity-jwt-manipulation (test none alg, key confusion, kid injection).
+      Record findings with finding_advance or signal_record.
+    save_output: .hacker-harness/artifacts/auth-token-audit-{{ target }}.md
+
+  - id: gate_injection_sweep
+    description: Approve role matrix and parameter injection testing
+    depends_on: [auth_token_audit]
+    approval: "Auth audit complete. Approve role matrix and parameter injection sweeps on {{ target }}?"
+
+  - id: injection_sweep
+    description: Role matrix, BFLA/BOLA, and deep parameter mutation sweeps
+    depends_on: [gate_injection_sweep]
+    prompt: >-
+      Execute role matrix and parameter injection sweep for {{ target }}. skill_load genpentest-p5-role-matrix.
+      Load tactical injection skills dynamically:
+      - web-sqli-blind-polyglot for database filter and sort parameters
+      - web-ssrf-cloud-pivot for URL fetchers and webhooks
+      - web-ssti-engine-rce for template and rendering parameters
+      - web-xxe-oob-extraction for XML and document parsers
+      - web-concurrency-race-condition for limits and coupons
+      All traffic must route through Caido MCP (caido_send_request) or local proxy.
+    save_output: .hacker-harness/artifacts/api-injection-{{ target }}.md
+
+  - id: summarize
+    description: API assessment summary and validation
+    depends_on: [injection_sweep]
+    prompt: >-
+      Consolidate all confirmed API vulnerabilities for {{ target }}.
+      Run /validate across all findings to ensure 7-Question Gate compliance.
+    save_output: .hacker-harness/artifacts/api-audit-summary-{{ target }}.md

@@ -1,0 +1,201 @@
+name: recon-deep
+description: Complete 20-stage reconnaissance, OSINT, SAST code audit, port scanning, and lead exploitation pipeline (R1-R20).
+version: 1
+inputs:
+  target: example.com
+nodes:
+  - id: authorize
+    description: Operator authorization for comprehensive 20-stage deep reconnaissance
+    approval: "Run complete 20-stage Reconnaissance, OSINT & Exploitation pipeline (R1-R20) against {{ target }}?"
+
+  - id: r1_sensitive
+    description: R1 — Sensitive file & dotfile discovery (.git, .env, backups, keys)
+    depends_on: [authorize]
+    prompt: >-
+      Execute R1 sensitive file discovery on {{ target }}. skill_load genpentest-p2-public-index.
+      If cloud assets/credentials are detected, skill_load cloud-aws-iam-privesc.
+      If VPN or appliance portals are found, skill_load perimeter-vpn-gateway-audit, perimeter-vcenter-appliance-audit, or perimeter-exchange-ntlm-info.
+      If dangling CNAME records are detected, skill_load recon-subdomain-takeover-audit.
+      If mobile APKs are referenced, skill_load mobile-apk-decompilation-audit.
+      Probe 58 high-risk paths (.git/config, .env, backups, keys). Save sensitive files to Recon/target_sensitive_files.txt.
+    save_output: .hacker-harness/artifacts/recon-deep-r1-{{ target }}.md
+
+  - id: r2_crawl
+    description: R2 — Web crawling with Katana
+    depends_on: [r1_sensitive]
+    prompt: >-
+      Execute R2 web crawl with Katana on {{ target }}. skill_load genpentest-p2-public-index.
+      Run: katana -u https://{{ target }} -d 3 -jc -kf -o Recon/target_katana.txt.
+    save_output: .hacker-harness/artifacts/recon-deep-r2-{{ target }}.md
+
+  - id: r3_archive_urls
+    description: R3 — URL extraction with GAU and Waybackurls
+    depends_on: [r2_crawl]
+    prompt: >-
+      Execute R3 historical URL extraction on {{ target }}. skill_load genpentest-p2-public-index.
+      Extract archive URLs with gau and waybackurls into Recon/target_gau.txt and Recon/target_wayback.txt.
+    save_output: .hacker-harness/artifacts/recon-deep-r3-{{ target }}.md
+
+  - id: r4_responsive
+    description: R4 — Responsive analysis (4a Emails, 4b Live tokens, 4c Sensitive files)
+    depends_on: [r3_archive_urls]
+    prompt: >-
+      Execute R4 responsive analysis on {{ target }}. skill_load genpentest-p2-public-index.
+      If JWTs appear, skill_load identity-jwt-manipulation.
+      Extract emails (>=5 count into GW_emails.txt), test token validity against live endpoints (GW_live_tokens.txt), and catalog exposed docs (GW_files.txt).
+    save_output: .hacker-harness/artifacts/recon-deep-r4-{{ target }}.md
+
+  - id: r5_js_analysis
+    description: R5 — JS bundle analysis, endpoint extraction, and postMessage sinks
+    depends_on: [r4_responsive]
+    prompt: >-
+      Execute R5 JS bundle analysis for {{ target }}. skill_load genpentest-p3-js-analysis.
+      If GraphQL endpoints appear, skill_load web-graphql-introspection-bypass.
+      Download bundles to Recon/jsbundles/, extract routes to Recon/gwjs_endpoints.txt, secrets to Recon/js_secrets.txt, and postMessage listeners to Recon/target_postmessage.txt.
+    save_output: .hacker-harness/artifacts/recon-deep-r5-{{ target }}.md
+
+  - id: r6_source_maps
+    description: R6 — Source map extraction (.map) and unminified source audit
+    depends_on: [r5_js_analysis]
+    prompt: >-
+      Execute R6 source map extraction on {{ target }}. skill_load genpentest-p3-js-analysis.
+      Unpack .map files and search unminified sources for internal endpoints and keys. Save results to Recon/target_recovered_sources.txt.
+    save_output: .hacker-harness/artifacts/recon-deep-r6-{{ target }}.md
+
+  - id: r7_params
+    description: R7 — Parameter discovery (Arjun) and LFI candidate extraction
+    depends_on: [r6_source_maps]
+    prompt: >-
+      Execute R7 parameter mining on {{ target }}. skill_load genpentest-p3-js-analysis.
+      Run Arjun on merged base paths to produce Recon/mined_endpoints.txt, generate Recon/GWJSAJQ_urls.txt, and extract LFI candidates with skill_load web-lfi-path-traversal-audit into Recon/ptLFI.txt.
+    save_output: .hacker-harness/artifacts/recon-deep-r7-{{ target }}.md
+
+  - id: r8_fingerprint
+    description: R8 — Technology fingerprinting (WhatWeb)
+    depends_on: [r7_params]
+    prompt: >-
+      Execute R8 technology fingerprinting on {{ target }}. skill_load genpentest-overview.
+      Run WhatWeb to fingerprint server, framework, OS, and CMS. Save to Recon/target_whatweb.txt.
+    save_output: .hacker-harness/artifacts/recon-deep-r8-{{ target }}.md
+
+  - id: r9_security_headers
+    description: R9 — Security headers check & CSP bypass matrix (CSPBypass)
+    depends_on: [r8_fingerprint]
+    prompt: >-
+      Execute R9 security headers and CSP audit on {{ target }}. skill_load web-xss-polyglot-execution.
+      Extract CSP domains to Recon/target_csp_domains.txt, query CSPBypass data.tsv for gadgets (Recon/target_csp_bypass_payloads.txt), and audit missing headers in Recon/security_headers.md.
+    save_output: .hacker-harness/artifacts/recon-deep-r9-{{ target }}.md
+
+  - id: r10_open_redirect
+    description: R10 — Open redirect testing and filter bypasses (OpenRedirex)
+    depends_on: [r9_security_headers]
+    prompt: >-
+      Execute R10 open redirect sweeps for {{ target }}. skill_load web-open-redirect-audit.
+      Merge gau/wayback and Arjun redirect parameters into Recon/P_O_Redirect.txt, run OpenRedirex with bypass list, and write confirmed findings to Recon/P_O_Redirect_findings.txt.
+    save_output: .hacker-harness/artifacts/recon-deep-r10-{{ target }}.md
+
+  - id: r11_injection_fuzz
+    description: R11 — Active XSS, SQLi, SSTI, IDOR, and Mass Assignment probing
+    depends_on: [r10_open_redirect]
+    prompt: >-
+      Execute R11 parameter vulnerability sweeps across GWJSAJQ_urls.txt for {{ target }}.
+      Load tactical skills:
+      - skill_load web-xss-polyglot-execution (Reflected, stored, DOM XSS & CSP bypass)
+      - skill_load web-sqli-blind-polyglot (SQLi leads saved to Recon/psqli.txt)
+      - skill_load web-ssti-engine-rce (Template injection candidates)
+      - skill_load web-idor-bola-authorization (Object parameter tampering)
+      - skill_load web-api-mass-assignment-pollution (Hidden parameter binding)
+      Route all test traffic through Caido.
+    save_output: .hacker-harness/artifacts/recon-deep-r11-{{ target }}.md
+
+  - id: r12_cspp
+    description: R12 — Client-Side Prototype Pollution (CSPP)
+    depends_on: [r11_injection_fuzz]
+    prompt: >-
+      Execute R12 prototype pollution testing on {{ target }}. skill_load web-prototype-pollution-cspp.
+      Test URL query parameters and hash fragments against client-side scripts. Write findings to Recon/target_cspp_findings.txt.
+    save_output: .hacker-harness/artifacts/recon-deep-r12-{{ target }}.md
+
+  - id: r13_ssrf_oob
+    description: R13 — SSRF and Out-Of-Band callback verification
+    depends_on: [r12_cspp]
+    prompt: >-
+      Execute R13 SSRF testing for {{ target }}. skill_load web-ssrf-cloud-pivot.
+      Save SSRF endpoints to Recon/target_ssrf_params.txt, probe cloud IMDS and interactsh callbacks, and record interactions in Recon/target_oob_callbacks.txt.
+    save_output: .hacker-harness/artifacts/recon-deep-r13-{{ target }}.md
+
+  - id: gate_exploitation
+    description: Approve active exploitation of discovered SQLi / LFI leads (E1/E2)
+    depends_on: [r13_ssrf_oob]
+    approval: "Core recon complete. Approve active exploitation of SQLi/LFI leads (E1/E2) on {{ target }}?"
+
+  - id: e1_e2_exploit
+    description: E1 & E2 — SQLi (sqlmap) and LFI active verification
+    depends_on: [gate_exploitation]
+    prompt: >-
+      Execute E1 and E2 exploitation for {{ target }}.
+      If SQLi leads exist in Recon/psqli.txt, skill_load web-sqli-blind-polyglot and run sqlmap with tamper scripts -> Recon/target_sqli_exploited.txt.
+      If LFI leads exist in Recon/ptLFI.txt, skill_load web-lfi-path-traversal-audit to verify file reads -> Recon/target_lfi_exploited.txt.
+    save_output: .hacker-harness/artifacts/recon-deep-exploit-{{ target }}.md
+
+  - id: gate_infra_osint
+    description: Approve OSINT, GitHub repo review, and port scanning (R14-R20)
+    depends_on: [e1_e2_exploit]
+    approval: "Approve OSINT, GitHub secret scanning, and perimeter port fuzzing for {{ target }}?"
+
+  - id: r14_github_osint
+    description: R14 — GitHub recon, organization dorking, and TruffleHog scans
+    depends_on: [gate_infra_osint]
+    prompt: >-
+      Execute R14 GitHub OSINT for {{ target }}. skill_load code-repo-secret-audit.
+      Run org dorks (target_gh_dorks.txt), TruffleHog live scans (target_trufflehog.txt), and PR/commit leak checks (target_gh_pr_leaks.txt, target_gh_commit_leaks.txt).
+    save_output: .hacker-harness/artifacts/recon-deep-r14-{{ target }}.md
+
+  - id: r15_code_review
+    description: R15 — Code review & static analysis (Semgrep, Bearer, SCA)
+    depends_on: [r14_github_osint]
+    prompt: >-
+      Execute R15 static code review for {{ target }}. skill_load code-review-deep-audit.
+      If CI/CD workflows are present, skill_load supply-chain-cicd-audit.
+      Run Semgrep, Bearer, and SCA dependency auditing. Generate line-numbered report in Recon/target_code_review_report.md.
+    save_output: .hacker-harness/artifacts/recon-deep-r15-{{ target }}.md
+
+  - id: r16_port_scan
+    description: R16 — External port scanning (Naabu / Nmap)
+    depends_on: [r15_code_review]
+    prompt: >-
+      Execute R16 port scanning on {{ target }}. skill_load perimeter-port-service-fuzz.
+      Run Naabu and Nmap service enumeration, saving open ports to Recon/target_ports.txt.
+    save_output: .hacker-harness/artifacts/recon-deep-r16-{{ target }}.md
+
+  - id: r17_r18_fuzz_403
+    description: R17 & R18 — Directory fuzzing (Feroxbuster) and 403/401 bypass sweeps
+    depends_on: [r16_port_scan]
+    prompt: >-
+      Execute R17 and R18 directory fuzzing and 403 bypass on {{ target }}. skill_load perimeter-port-service-fuzz.
+      Fuzz with feroxbuster to Recon/target_ferox.txt, then test 403/401 restriction bypasses (headers, path normalization) to Recon/target_403_bypasses.txt.
+    save_output: .hacker-harness/artifacts/recon-deep-r17-r18-{{ target }}.md
+
+  - id: r19_cors
+    description: R19 — CORS origin reflection & credentials check
+    depends_on: [r17_r18_fuzz_403]
+    prompt: >-
+      Execute R19 CORS auditing on {{ target }}. skill_load web-cors-misconfiguration-bypass.
+      Probe arbitrary origins, null origin, and prefix/suffix regex flaws across discovered API routes. Save findings to Recon/target_cors_findings.txt.
+    save_output: .hacker-harness/artifacts/recon-deep-r19-{{ target }}.md
+
+  - id: r20_crtsh
+    description: R20 — Certificate transparency & SAN subdomain mining (crt.sh)
+    depends_on: [r19_cors]
+    prompt: >-
+      Execute R20 certificate transparency mining on {{ target }}. skill_load recon-subdomain-takeover-audit.
+      Query crt.sh for historical certificates and SAN subdomains, saving results to Recon/target_crtsh.txt.
+    save_output: .hacker-harness/artifacts/recon-deep-r20-{{ target }}.md
+
+  - id: summarize
+    description: Master reconnaissance synthesis and 7-Question Validation Gate
+    depends_on: [r20_crtsh]
+    prompt: >-
+      Synthesize all 20 recon phase outputs for {{ target }} into Recon/publicindex.md and Recon/recon_summary.md.
+      Run /validate across all discovered findings to evaluate against the 7-Question Validation Gate.
+    save_output: .hacker-harness/artifacts/recon-deep-summary-{{ target }}.md

@@ -1,0 +1,22 @@
+name: authorized-web-review
+description: Plan, approve, and document a scoped web security review
+version: 1
+inputs:
+  target: example.com
+nodes:
+  - id: plan
+    description: Build a scope-aware test plan
+    prompt: >-
+      Create a concise, non-destructive security test plan for {{ target }}. Read the scope manifest first.
+      Do not execute network requests. Include stop conditions and evidence requirements.
+    save_output: .hacker-harness/artifacts/test-plan.md
+  - id: authorize
+    description: Human authorization gate
+    depends_on: [plan]
+    approval: "Confirm that {{ target }} is authorized and approve the planned active testing?"
+  - id: review
+    description: Review existing local evidence
+    depends_on: [authorize]
+    prompt: >-
+      Review local evidence and the test plan for {{ target }}. Identify gaps and prioritize safe validation.
+    save_output: .hacker-harness/artifacts/review.md

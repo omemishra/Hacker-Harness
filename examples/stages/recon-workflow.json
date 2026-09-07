@@ -1,0 +1,137 @@
+{
+  "workflow": "recon-workflow",
+  "stages": [
+    {
+      "id": "R1",
+      "title": "Sensitive File Exposure \u2014 .git + .env + credentials",
+      "source": "recon-framework.md",
+      "heading": "R1"
+    },
+    {
+      "id": "R2",
+      "title": "Web Crawling \u2014 katana",
+      "source": "recon-framework.md",
+      "heading": "R2"
+    },
+    {
+      "id": "R3",
+      "title": "URL Extraction \u2014 gau + waybackurls",
+      "source": "recon-framework.md",
+      "heading": "R3"
+    },
+    {
+      "id": "R4",
+      "title": "Responsive Analysis \u2014 gau/wayback Findings",
+      "source": "recon-framework.md",
+      "heading": "R4"
+    },
+    {
+      "id": "R5",
+      "title": "JS Bundle Analysis \u2014 getJS + jsluice + data leak hunt",
+      "source": "recon-framework.md",
+      "heading": "R5"
+    },
+    {
+      "id": "R6",
+      "title": "Source Map Extraction",
+      "source": "recon-framework.md",
+      "heading": "R6"
+    },
+    {
+      "id": "R7",
+      "title": "Parameter Discovery \u2014 Arjun + qsreplace (feeds into GWJSAJQ_urls.txt)",
+      "source": "recon-framework.md",
+      "heading": "R7"
+    },
+    {
+      "id": "R8",
+      "title": "Technology Fingerprinting \u2014 whatweb",
+      "source": "recon-framework.md",
+      "heading": "R8"
+    },
+    {
+      "id": "R9",
+      "title": "Security Headers Check + CSP Bypass",
+      "source": "recon-framework.md",
+      "heading": "R9"
+    },
+    {
+      "id": "R10",
+      "title": "Open Redirect \u2014 from gau/wayback + Arjun/qreplace params",
+      "source": "recon-framework.md",
+      "heading": "R10"
+    },
+    {
+      "id": "R11",
+      "title": "XSS/SQLi/SSTI/IDOR \u2014 XSStrike (on GWJSAJQ_urls.txt)",
+      "source": "recon-framework.md",
+      "heading": "R11"
+    },
+    {
+      "id": "R12",
+      "title": "Client-Side Prototype Pollution (CSPP)",
+      "source": "recon-framework.md",
+      "heading": "R12"
+    },
+    {
+      "id": "R13",
+      "title": "SSRF Testing + Blind XSS OOB \u2014 Parameter Discovery + ssrfmap + interachsh",
+      "source": "recon-framework.md",
+      "heading": "R13"
+    },
+    {
+      "id": "E1",
+      "title": "SQLi Exploitation \u2014 BSQLi 2.0 + sqlmap",
+      "source": "recon-framework.md",
+      "heading": "E1"
+    },
+    {
+      "id": "E2",
+      "title": "LFI + Path Traversal Exploitation",
+      "source": "recon-framework.md",
+      "heading": "E2"
+    },
+    {
+      "id": "R14",
+      "title": "GitHub Recon",
+      "source": "recon-framework.md",
+      "heading": "R14"
+    },
+    {
+      "id": "R15",
+      "title": "Code Review \u2014 Full Source Analysis via CC",
+      "source": "recon-framework.md",
+      "heading": "R15"
+    },
+    {
+      "id": "R16",
+      "title": "Port Scanning (URL_ONLY \u2014 same host)",
+      "source": "recon-framework.md",
+      "heading": "R16"
+    },
+    {
+      "id": "R17",
+      "title": "Directory/Endpoint Fuzzing \u2014 feroxbuster (preferred) / ffuf",
+      "source": "recon-framework.md",
+      "heading": "R17"
+    },
+    {
+      "id": "R18",
+      "title": "403/401 Bypass \u2014 gobypass403 + manual techniques",
+      "source": "recon-framework.md",
+      "heading": "R18"
+    },
+    {
+      "id": "R19",
+      "title": "CORS Misconfiguration Check",
+      "source": "recon-framework.md",
+      "heading": "R19"
+    },
+    {
+      "id": "R20",
+      "title": "SSL/Certificate Analysis (crt.sh)",
+      "source": "recon-framework.md",
+      "heading": "R20"
+    }
+  ]
+}

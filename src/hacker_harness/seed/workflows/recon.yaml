@@ -1,0 +1,152 @@
+name: recon
+description: File-gated Reconnaissance Pipeline (R0-R8). Crawls, harvests archive URLs, extracts JS routes, mines parameters, and probes initial leads.
+version: 1
+inputs:
+  target: example.com
+nodes:
+  - id: authorize
+    description: Operator approval to run reconnaissance pipeline against target
+    approval: "Run file-gated Reconnaissance Pipeline (R0-R8) against {{ target }}?"
+
+  - id: r0
+    description: Scope verification and pre-flight check
+    depends_on: [authorize]
+    prompt: >-
+      Execute Recon R0 for {{ target }}. skill_load genpentest-overview.
+      Verify authorization scope boundaries (SCOPEONLY vs WILDCARD) and tool availability.
+      Write Recon/scope_summary.md.
+      Print "✓ Methodology loaded. Starting R0." Do not start R1.
+    save_output: .hacker-harness/artifacts/recon-r0-{{ target }}.md
+
+  - id: gate_r1
+    description: Confirm R0 scope before sensitive files probe
+    depends_on: [r0]
+    approval: "R0 complete with Recon/scope_summary.md on disk? Approve R1 sensitive file discovery for {{ target }}."
+
+  - id: r1
+    description: Sensitive file exposure and dotfile discovery
+    depends_on: [gate_r1]
+    prompt: >-
+      Execute Recon R1 for {{ target }}. skill_load genpentest-p2-public-index.
+      If cloud or VPN gateways appear, optionally skill_load cloud-aws-iam-privesc or perimeter-vpn-gateway-audit.
+      Probe for .git/config, .env, backups, keys, and credentials.
+      Requires Recon/scope_summary.md. Write Recon/sensitive_files.txt, Recon/dotfiles.txt, and Recon/leaked_secrets.txt.
+      Print "✓ Methodology loaded. Starting R1." Do not start R2.
+    save_output: .hacker-harness/artifacts/recon-r1-{{ target }}.md
+
+  - id: gate_r2
+    description: Confirm R1 artifacts before crawling
+    depends_on: [r1]
+    approval: "R1 complete with sensitive files artifacts on disk? Approve R2 web crawling and archive harvest."
+
+  - id: r2
+    description: Web crawling and historical archive URL harvesting
+    depends_on: [gate_r2]
+    prompt: >-
+      Execute Recon R2 for {{ target }}. skill_load genpentest-p2-public-index.
+      Run active crawl with katana and harvest archive URLs with gau and waybackurls.
+      Requires Recon/scope_summary.md. Write Recon/katana_urls.txt, Recon/target_gau.txt, and Recon/target_wayback.txt.
+      Print "✓ Methodology loaded. Starting R2." Do not start R3.
+    save_output: .hacker-harness/artifacts/recon-r2-{{ target }}.md
+
+  - id: gate_r3
+    description: Confirm R2 artifacts before responsive analysis
+    depends_on: [r2]
+    approval: "R2 complete with crawled and archive URLs on disk? Approve R3 responsive analysis."
+
+  - id: r3
+    description: Responsive analysis, live tokens, and emails
+    depends_on: [gate_r3]
+    prompt: >-
+      Execute Recon R3 for {{ target }}. skill_load genpentest-p2-public-index.
+      If JWT tokens are found, skill_load identity-jwt-manipulation.
+      Extract emails (>=5 occurrences), validate URL tokens against live servers, and identify exposed documents.
+      Requires Recon/target_gau.txt and Recon/target_wayback.txt.
+      Write Recon/GW_emails.txt, Recon/GW_live_tokens.txt, and Recon/GW_files.txt.
+      Print "✓ Methodology loaded. Starting R3." Do not start R4.
+    save_output: .hacker-harness/artifacts/recon-r3-{{ target }}.md
+
+  - id: gate_r4
+    description: Confirm R3 artifacts before JS analysis
+    depends_on: [r3]
+    approval: "R3 complete with token/email findings on disk? Approve R4 JavaScript analysis."
+
+  - id: r4
+    description: JavaScript bundle analysis and endpoint mapping
+    depends_on: [gate_r4]
+    prompt: >-
+      Execute Recon R4 for {{ target }}. skill_load genpentest-p3-js-analysis.
+      If GraphQL endpoints appear, skill_load web-graphql-introspection-bypass.
+      Extract API routes, endpoints, source maps, and hardcoded secrets.
+      Requires Recon/katana_urls.txt.
+      Write Recon/gwjs_endpoints.txt, Recon/js_secrets.txt, and Recon/js_bundles.txt.
+      Print "✓ Methodology loaded. Starting R4." Do not start R5.
+    save_output: .hacker-harness/artifacts/recon-r4-{{ target }}.md
+
+  - id: gate_r5
+    description: Confirm R4 artifacts before parameter mining
+    depends_on: [r4]
+    approval: "R4 complete with JS endpoints on disk? Approve R5 parameter discovery and URL synthesis."
+
+  - id: r5
+    description: Parameter mining and synthesized test URL generation
+    depends_on: [gate_r5]
+    prompt: >-
+      Execute Recon R5 for {{ target }}. skill_load genpentest-p3-js-analysis.
+      Merge base paths from R2 + R4. Discover query parameters with arjun and qsreplace.
+      Synthesize comprehensive URL list into GWJSAJQ_urls.txt and extract LFI candidates to ptLFI.txt.
+      Requires Recon/gwjs_endpoints.txt and Recon/target_gau.txt.
+      Write Recon/mined_endpoints.txt, Recon/GWJSAJQ_urls.txt, and Recon/ptLFI.txt.
+      Print "✓ Methodology loaded. Starting R5." Do not start R6.
+    save_output: .hacker-harness/artifacts/recon-r5-{{ target }}.md
+
+  - id: gate_r6
+    description: Confirm R5 artifacts before fingerprinting
+    depends_on: [r5]
+    approval: "R5 complete with synthesized test URLs on disk? Approve R6 fingerprinting & security headers."
+
+  - id: r6
+    description: Technology fingerprinting and security headers audit
+    depends_on: [gate_r6]
+    prompt: >-
+      Execute Recon R6 for {{ target }}. skill_load genpentest-overview.
+      Fingerprint backend technologies, web server, and CMS frameworks with whatweb.
+      Audit security headers (CSP, CORS, HSTS) and identify CSP bypass vectors.
+      Requires Recon/scope_summary.md.
+      Write Recon/tech_stack.md, Recon/security_headers.md, and Recon/csp_bypass.md.
+      Print "✓ Methodology loaded. Starting R6." Do not start R7.
+    save_output: .hacker-harness/artifacts/recon-r6-{{ target }}.md
+
+  - id: gate_r7
+    description: Confirm R6 artifacts before vulnerability probing
+    depends_on: [r6]
+    approval: "R6 complete with tech stack & headers on disk? Approve R7 active parameter probing."
+
+  - id: r7
+    description: Active vulnerability probing and injection leads
+    depends_on: [gate_r7]
+    prompt: >-
+      Execute Recon R7 for {{ target }}.
+      FIRST write Recon/plans/Recon_Probe_Plan.md.
+      Load tactical skills dynamically: genpentest-p4-client-side (open redirect), web-sqli-blind-polyglot (SQLi leads), web-ssrf-cloud-pivot (SSRF params), web-ssti-engine-rce (templates).
+      Route active probes through Caido MCP (caido_send_request) or local proxy.
+      Requires Recon/GWJSAJQ_urls.txt and Recon/tech_stack.md.
+      Write Recon/plans/Recon_Probe_Plan.md, Recon/open_redirects.md, Recon/psqli.txt, and Recon/findings/recon_leads.md.
+      Print "✓ Methodology loaded. Starting R7." Do not start R8.
+    save_output: .hacker-harness/artifacts/recon-r7-{{ target }}.md
+
+  - id: gate_r8
+    description: Confirm R7 artifacts before final recon consolidation
+    depends_on: [r7]
+    approval: "R7 complete with probe findings on disk? Approve R8 consolidation & validation."
+
+  - id: r8
+    description: Recon consolidation, public index report, and validation gate
+    depends_on: [gate_r8]
+    prompt: >-
+      Execute Recon R8 for {{ target }}. skill_load genpentest-p2-public-index.
+      Synthesize all collected assets, endpoints, parameters, and findings into Recon/publicindex.md.
+      Evaluate all findings against the 7-Question Validation Gate (/validate).
+      Write Recon/publicindex.md and Recon/recon_summary.md.
+      Print "✓ Methodology loaded. Starting R8."
+    save_output: .hacker-harness/artifacts/recon-r8-{{ target }}.md

@@ -1,0 +1,36 @@
+name: example-api-audit
+description: Example multi-stage API security audit workflow with human approval gates
+version: 1
+inputs:
+  target: example.com
+nodes:
+  - id: authorize
+    description: Initial operator authorization
+    approval: "Authorize API security review against {{ target }}?"
+
+  - id: scan_endpoints
+    description: Enumerate active routes
+    depends_on: [authorize]
+    command: "curl -s -I https://{{ target }}"
+    save_output: ".hacker-harness/artifacts/{{ target }}-headers.txt"
+
+  - id: analyze_headers
+    description: Analyze security headers and signatures
+    depends_on: [scan_endpoints]
+    prompt: >-
+      Review the HTTP headers for {{ target }}: {{ scan_endpoints }}.
+      Identify missing security headers (CSP, HSTS, X-Content-Type-Options) and suggest test priorities.
+    save_output: ".hacker-harness/artifacts/{{ target }}-headers-analysis.md"
+
+  - id: gate_testing
+    description: Operator checkpoint before active testing
+    depends_on: [analyze_headers]
+    approval: "Review {{ target }}-headers-analysis.md. Authorize active API testing?"
+
+  - id: test_api
+    description: Active authenticated probes
+    depends_on: [gate_testing]
+    prompt: >-
+      Perform authorization and parameter testing against {{ target }}.
+      Document confirmed findings with reproduction steps.
+    save_output: ".hacker-harness/artifacts/{{ target }}-findings.md"
